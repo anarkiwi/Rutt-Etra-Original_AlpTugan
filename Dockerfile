@@ -13,12 +13,23 @@
 #
 # Build:   DOCKER_BUILDKIT=1 docker build -t rutt-etra .
 #
-# Run (Linux host with X11):
+# Run (Linux host with X11). The app hard-codes `data/ISP_haydarpasa/` as
+# its media source (ofApp::setup, src/ofApp.cpp:35-36).
+#
+# IMPORTANT: the mounted folder MUST contain the right kind of media for the
+# baked-in mode, or ofApp::setTranslationPoints() segfaults at startup
+# (it indexes vidPlayer[0] / images[0] without a size check):
+#   * mode=VIDEO (default) → folder needs .mov / .mp4 (lowercase ext only;
+#     ofDirectory::allowExt is case-sensitive on Linux). Rename DJI_*.MP4 etc.
+#   * mode=IMAGE          → folder needs .jpg / .png / etc.
+# Switch modes at build-time with --build-arg MODE=IMAGE (see ARG MODE below).
+#
 #     xhost +local:docker
 #     docker run --rm -it \
 #         -e DISPLAY="$DISPLAY" \
 #         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
 #         --device /dev/dri \
+#         -v "$PWD/my_media:/app/bin/data/ISP_haydarpasa:ro" \
 #         rutt-etra
 #     # when done: xhost -local:docker
 
@@ -220,14 +231,34 @@ WORKDIR ${APP_DIR}
 # Copy the project sources last so source edits don't bust earlier layers.
 COPY . ${APP_DIR}
 
-# TIMELINE_AUDIO_INCLUDED gates ofxTimeline::addAudioTrack/getAudioTrack —
-# the project calls both of these and the addon compiles fine with it set.
-# Drop ofxAudioDecoder from addons.make — nothing in src/ references it,
-# and its kylemcdonald build pulls in macOS-only headers.
+# Source mode is hard-coded in src/ofApp.cpp:35 ("mode = VIDEO;"). Override
+# at build time with `--build-arg MODE=IMAGE` (or CAM). Anything but VIDEO
+# triggers a sed before compile; matched as a literal "mode = X;".
+ARG MODE=VIDEO
 RUN --mount=type=cache,target=/root/.ccache \
     set -eux; \
     rm -rf obj bin/Rutt-Etra* ; \
     sed -i '/^ofxAudioDecoder$/d' addons.make; \
+    if [ "${MODE}" != "VIDEO" ]; then \
+        sed -i "s|mode = VIDEO;|mode = ${MODE};|" src/ofApp.cpp; \
+    fi; \
+    # ofApp::setupVideos calls .load() but never .play() — on Linux the
+    # gstreamer pipeline stays in PAUSED preroll, getPixels() returns 0×0,
+    # and the mesh-build loop never adds any vertices (empty FBO + post-glitch
+    # shader -> pulsing green). Inject setLoopState + play() on every clip.
+    sed -i 's|vidPlayer\[i\]\.load(dirVid\.getPath(i));|vidPlayer[i].load(dirVid.getPath(i)); vidPlayer[i].setLoopState(OF_LOOP_NORMAL); vidPlayer[i].play();|' \
+        src/ofApp.cpp; \
+    # The bundled bin/data/{RuttEtra_Settings.xml,timeline0_*.xml,_*.xml}
+    # restore a saved UI state where the timeline is shown filling the whole
+    # window and a long stack of PostGlitch effects is enabled — together
+    # they completely paint over the mesh viewport. Delete them so the image
+    # boots into clean defaults; users can save their own state at runtime.
+    rm -f bin/data/RuttEtra_Settings.xml bin/data/timeline0_*.xml \
+          bin/data/_keyframes.xml bin/data/_Page_One_trackPositions.xml; \
+    # TIMELINE_AUDIO_INCLUDED gates ofxTimeline::addAudioTrack/getAudioTrack —
+    # the project calls both of these and the addon compiles fine with it set.
+    # Drop ofxAudioDecoder from addons.make — nothing in src/ references it,
+    # and its kylemcdonald build pulls in macOS-only headers.
     make -j"$(nproc)" Release \
         PROJECT_DEFINES="TIMELINE_AUDIO_INCLUDED"
 
@@ -243,6 +274,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libgl1 libglu1-mesa libglew2.2 libglfw3 libfreeimage3 \
       libfreetype6 libfontconfig1 libcairo2 \
       libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-libav \
+      gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+      gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-x \
       libopenal1 libsndfile1 libasound2 libpulse0 \
       librtaudio6 librtmidi6 libudev1 libusb-1.0-0 \
       libgtk-3-0 libxinerama1 libxcursor1 libxrandr2 libxi6 \
@@ -254,5 +287,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 WORKDIR /app
 COPY --from=build /opt/openFrameworks/apps/myApps/Rutt-Etra/bin /app/bin
+# The app's hardcoded media folder. Empty by default — bind-mount your
+# own images/videos onto /app/bin/data/ISP_haydarpasa at run-time.
+RUN mkdir -p /app/bin/data/ISP_haydarpasa
 WORKDIR /app/bin
 CMD ["./Rutt-Etra"]

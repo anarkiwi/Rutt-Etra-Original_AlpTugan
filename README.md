@@ -28,6 +28,60 @@ The code is still a little bit dirty and undocumented. Basically, the app has th
 - Keyboard interaction
 - GUI interaction
 ------------
+## Controls
+
+The default window opens with the GUI hidden in the top-right and the
+timeline hidden at the bottom — that is why a fresh launch shows only
+"numbered rectangles". Press `t` to bring up the timeline and look at the
+top-right of the window for the parameter panel.
+
+### Keyboard
+
+| Key            | Action                                                         |
+| -------------- | -------------------------------------------------------------- |
+| `t`            | Toggle the **timeline** (FX switches, camera-track keyframes). |
+| `h`            | Toggle the **mouse cursor**.                                   |
+| `d`            | Toggle **debug** (shows cursor + on-screen info).              |
+| `f`            | Toggle **fullscreen**.                                         |
+| `↓` / `↑`      | Next / previous video or image in the source folder.           |
+| `space`        | Play / pause the current video.                                |
+| `p`            | Toggle **point** vs lines mesh mode.                           |
+| `w`            | Toggle **white** vs source-coloured mesh.                      |
+| `r` / `R`      | Increase / decrease **Z-depth** multiplier.                    |
+| `y` / `u`      | Increase / decrease the **vertical vertex distance**.          |
+| `a`            | Add a camera keyframe (timeline visible only).                 |
+| `l`            | Lock / unlock the camera to the camera track (timeline only).  |
+
+### GUI panel (top-right, drag the title bar to move)
+
+`RuttEtra_Options` exposes:
+
+- **POST GLITCH FX** — enables the `ofxPostGlitch` shader chain.
+- **Vertical / Horizontal Vertex Distance** — mesh sampling step (smaller = denser, slower).
+- **Z-Depth Vertex** — extrusion amount driven by pixel luma.
+- **sound Multiplier Fac**, **Sound Reactive Mode**, **Enable Video Sound** — sound-driven Z displacement.
+- **Mesh Line Thickness**, **Show Mesh Frame**, **Set Color**, **POINT Mesh Mode**.
+- **Sound Player** sub-panel — load an external `.wav`/`.aiff` from `bin/data/sounds/`, play/pause, volume.
+- **FX Types** — toggleable post-process effects: *Converge, Glow, Shaker, Cut Slider, Twist, Outline, Noise, Slitscan, Swell, Invert, High Contrast, Blue/Green/Red Raise, Blue/Red/Green Invert*, plus a *Glow Effect Amount* slider.
+
+The GUI can be dragged; the timeline shows along the bottom once toggled with `t`.
+
+### Mouse / camera
+
+The viewport uses an `ofEasyCam`-style controller (left-drag = orbit,
+right-drag / scroll = dolly). When the timeline is showing and the camera
+is *not* locked (`l`), mouse input drives the camera; when locked, the
+camera follows the recorded track.
+
+### Source folder & mode
+
+Media lives in `data/ISP_haydarpasa/` (hard-coded at `src/ofApp.cpp:35-36`).
+The Docker image picks the source kind from the `MODE` build-arg
+(`VIDEO` default → `.mov`/`.mp4` lowercase; `IMAGE` → `.jpg`/`.png`; `CAM`
+→ webcam at 320×240). Bind-mount your media folder onto
+`/app/bin/data/ISP_haydarpasa` at run-time.
+
+------------
 ## Dependecies
 - ofxCameraMove
 - ofxFFT
