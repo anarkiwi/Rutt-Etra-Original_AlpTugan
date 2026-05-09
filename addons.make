@@ -5,7 +5,15 @@ ofxGui
 ofxKorgNanoKontrol
 ofxMidi
 ofxMotionBlurCamera
+ofxTimeline
 ofxPostGlitch
 ofxPostProcessing
+ofxPostProcessingManager
 ofxXmlSettings
 ofxPoco
+ofxTimecode
+ofxMSATimer
+ofxTextInputField
+ofxRange
+ofxTween
+ofxAudioDecoder

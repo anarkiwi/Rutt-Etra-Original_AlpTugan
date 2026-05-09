@@ -1,0 +1,21 @@
+.git
+.gitignore
+obj/
+bin/Rutt-Etra*
+bin/*.app
+*.swp
+.DS_Store
+.vscode
+.idea
+
+# Stale symlinks pointing to ../../of_v0.9.0_linux64_release/.
+# (ofxGui ships with OF 0.12.1 itself, so these aren't needed.)
+src/ofxBaseGui.h
+src/ofxButton.h
+src/ofxGui.h
+src/ofxGuiGroup.h
+src/ofxLabel.h
+src/ofxPanel.h
+src/ofxSlider.h
+src/ofxSliderGroup.h
+src/ofxToggle.h

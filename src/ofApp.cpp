@@ -144,7 +144,7 @@ void ofApp::setup(){
     fx.setup(&fbo);
 
     fxManager.setup(ofGetWidth(),ofGetHeight(),"",10);
-    fxManager.setFlip(false);
+    // fxManager.setFlip(false);
     fxManager.loadSettings();
     
     // Default parameter values
@@ -463,8 +463,8 @@ void ofApp::bangFired(ofxTLBangEventArgs& args) {
 //--------------------------------------------------------------
 void ofApp::switchFired(ofxTLSwitchEventArgs& args) {
     //cout << "switch fired!" << args.switchName << "::" << args.on << endl;
-    if(ofToInt(args.switchName) != 0)
-        fxManager.setFX(ofToInt(args.switchName), args.on);
+    //if(ofToInt(args.switchName) != 0)
+    //    fxManager.setFX(ofToInt(args.switchName), args.on);
 }
 
 void ofApp::switchFired2(ofxTLSwitchEventArgs& args) {
@@ -474,8 +474,8 @@ void ofApp::switchFired2(ofxTLSwitchEventArgs& args) {
     }else if(args.switchName == "bw") {
         isWhiteColor = args.on;
     }else{
-        if(ofToInt(args.switchName) != 0)
-                fxManager.setFX(ofToInt(args.switchName), args.on);
+    //    if(ofToInt(args.switchName) != 0)
+    //            fxManager.setFX(ofToInt(args.switchName), args.on);
     }
 }
 
@@ -485,8 +485,8 @@ void ofApp::switchFired2(ofxTLSwitchEventArgs& args) {
 //--------------------------------------------------------------
 void ofApp::updateFXParameters() {
     // FX
-    if(fx.getFx(OFXPOSTGLITCH_GLOW))
-        fx.setBlurAmt(glowAmount);
+    //if(fx.getFx(OFXPOSTGLITCH_GLOW))
+    //    fx.setBlurAmt(glowAmount);
 
 #ifdef KORG_ENABLED
     (nano.getVal(K_BUTTON_2,K_TYPE_BUTTON)) ? converge = true : converge = false;
